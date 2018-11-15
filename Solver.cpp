@@ -36,8 +36,12 @@ map<string,int> Solver::solve()
     {
         ins.push_back(0);
     }
+    iterations = 0;
     if(lookAhead(v,D,C,ins))
-    return v;
+    {
+        cout << "after: " << iterations << " iterations, done!" << endl;
+        return v;
+    }
     cout << "no answer";
     return v;
 }
@@ -45,28 +49,21 @@ map<string,int> Solver::solve()
 bool Solver::lookAhead(map<string,int>& A, Domains& d,Constraint ** c,
                        vector<int> instanciated)
 {
-
+    iterations++;
     pc2(d,X,c,instanciated);
     d.print();
     if(inconsistant(c))
         return false;
     if(allInstanciated(instanciated))
         return true;
-    int iV = next(X,d,instanciated);
+    int iV = nextH(X,d,instanciated);
     Variable v = X[iV];
     instanciated[iV] = 1;
     cout << "instanciating: " << v.name << endl;
-//    cout << "size: " << d[v].size() << endl;
-//    d.print();
     for (int i = 0; i < d[v].size(); ++i)
     {
         cout << "val: " << d[v][i] << endl;
         Domains newD = d;
-//        cout << "d: " ;
-//        d.print();
-//        cout << endl << "newD: ";
-//        newD.print();
-//        cout << endl;
         newD.clear(v);
         newD.add(v,d[v][i]);
         map<string,int> newA = A;
@@ -127,13 +124,10 @@ void Solver::pc1(Domains& d, vector<Variable>& x, Constraint ** c,vector<int> in
         done = true;
         for (int i = 0; i < X.size(); ++i)
         {
-//            if (instanciated[i]) continue;
             for (int j = 0; j < X.size(); ++j)
             {
-//                if (instanciated[j])continue;
                 for (int k = 0; k < X.size(); ++k)
                 {
-//                    if (instanciated[k])continue;
                     if (revise(i, j, k, d, c)) done = false;
                 }
             }
@@ -145,17 +139,8 @@ void Solver::pc1(Domains& d, vector<Variable>& x, Constraint ** c,vector<int> in
 
 bool Solver::revise(int i, int j, int k, Domains d, Constraint **c)
 {
-//    cout << "gonna do:" << endl;
-//    c[i][k].print();
-//    cout << "*" << endl;
-//    c[k][k].print();
-//    cout << "*" << endl;
-//    c[k][j].print();
-//    cout << "ok" << endl;
+
     Constraint temp = c[i][j]&(c[i][k]*c[k][k]*c[k][j]);
-//    c[i][j].print();
-//    cout << "and " << endl;
-//    temp.print();
     if(temp == c[i][j]) return false;
     c[i][j] = temp;
     return true;
@@ -169,7 +154,6 @@ void Solver::updateDomain(Domains& d, Constraint **c,vector<Variable>& x)
         {
             Constraint con = c[i][j];
             Variable var = x[i];
-//            con.print();
             for (int k = 0; k < con.n; ++k)
             {
                 bool allZero = true;
@@ -179,7 +163,6 @@ void Solver::updateDomain(Domains& d, Constraint **c,vector<Variable>& x)
                 }
                 if(allZero)
                 {
-//                    cout << "removing from " << var.name << " value: " << k << endl;
                     d.remove(var,k);
                 }
             }
@@ -227,8 +210,8 @@ bool Solver::inconsistant(Constraint **c)
         {
             if(c[i][j].isZero())
             {
-                cout << "inconsistant in: " << i << j << endl;
-                c[i][j].print();
+//                cout << "inconsistant in: " << i << j << endl;
+//                c[i][j].print();
                 return true;
             }
         }
@@ -253,6 +236,22 @@ bool Solver::allInstanciated(vector<int> instanciated)
             return false;
     }
     return true;
+}
+
+int Solver::nextH(vector<Variable> &vec, Domains D, vector<int> instanciated)
+{
+    int minD = INT32_MAX;
+    int savedI = 0;
+    for (int i = 0; i < vec.size(); ++i)
+    {
+        int size = D[vec[i]].size();
+        if(!instanciated[i] && size < minD)
+        {
+            savedI = i;
+            minD = size;
+        }
+    }
+    return savedI;
 }
 
 

@@ -34,7 +34,7 @@ int main()
 //    solver.setConstraint(0,1,c);
 //    map<string,int> res = solver.solve();
 //    cout << "a: " << res["a"] << " b: " << res["b"] << endl;
-    Solver s = generateNQueenProblem(4);
+    Solver s = generateNQueenProblem(8);
     map<string,int> res = s.solve();
     map<string,int>::iterator it;
     cout << "result: " << endl;
@@ -95,8 +95,4 @@ Solver generateNQueenProblem(int N)
         }
     }
     return solver;
-//    map<string,int> res = solver.solve();
-//    map<string,int>::iterator it;
-//    for(it = res.begin(); it != res.end(); it++)
-//        cout << it->first << ": " << it->second << endl;
 }

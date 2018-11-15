@@ -15,6 +15,7 @@ class Solver
     vector<Variable> X;
     Constraint** C;
 public:
+    int iterations = 0;
     Solver(Domains &D, const vector<Variable> &X);
     void setConstraint(int i,int j, Constraint c);
     map<string,int> solve();
@@ -27,6 +28,7 @@ public:
     Constraint** copy(Constraint** c);
     bool inconsistant(Constraint** c);
     int next(vector<Variable>& vec,Domains D,vector<int>);
+    int nextH(vector<Variable>& vec,Domains D,vector<int>);
     bool allInstanciated(vector<int> instanciated);
 
 };
