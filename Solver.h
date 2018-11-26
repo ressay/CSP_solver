@@ -30,7 +30,17 @@ public:
     int next(vector<Variable>& vec,Domains D,vector<int>);
     int nextH(vector<Variable>& vec,Domains D,vector<int>);
     bool allInstanciated(vector<int> instanciated);
-
+    void print()
+    {
+        for (int i = 0; i < X.size(); ++i)
+        {
+            for (int j = 0; j < X.size(); ++j)
+            {
+                cout << "Mp[" << i << "," << j << "]:" << endl;
+                C[i][j].print();
+            }
+        }
+    }
 };
 
 

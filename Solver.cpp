@@ -84,7 +84,7 @@ void Solver::pc2(Domains &d, vector<Variable> &x, Constraint **c, vector<int> in
     vector<pair<int,int>> q;
     for (int i = 0; i < x.size(); ++i)
     {
-        for (int j = i; j < x.size(); ++j)
+        for (int j = i+1; j < x.size(); ++j)
         {
             q.emplace_back(i,j);
         }
