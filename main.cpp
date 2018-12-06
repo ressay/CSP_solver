@@ -28,19 +28,19 @@ long getMillisTime()
 int main()
 {
 //    Solver s = generateNQueenProblem(13);
-//    Solver s = generateCSPRandom(8,6,0.3);
-//    s.print();
+    Solver s = generateCSPRandom(8,6,0.3);
+    s.print();
 
-//    long t1 = getMillisTime();
-//    map<string,int> res = s.solve(false);
-//    long t2 = getMillisTime();
-//    printf("solved in %ld\n",(t2-t1));
-//    map<string,int>::iterator it;
-//    cout << "result: " << endl;
-//    for(it = res.begin(); it != res.end(); it++)
-//        cout << it->first << ": " << it->second << endl;
+    long t1 = getMillisTime();
+    map<string,int> res = s.solve(false);
+    long t2 = getMillisTime();
+    printf("solved in %ld\n",(t2-t1));
+    map<string,int>::iterator it;
+    cout << "result: " << endl;
+    for(it = res.begin(); it != res.end(); it++)
+        cout << it->first << ": " << it->second << endl;
 //    queenStats();
-    otherStats();
+//    otherStats();
     return 0;
 }
 
