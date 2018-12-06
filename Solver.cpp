@@ -28,7 +28,7 @@ void Solver::setConstraint(int i, int j, Constraint c)
     C[j][i] = C[j][i]&c.transpose();
 }
 
-map<string,int> Solver::solve()
+map<string,int> Solver::solve(bool heuristic)
 {
     map<string,int> v;
     vector<int> ins;
@@ -36,8 +36,16 @@ map<string,int> Solver::solve()
     {
         ins.push_back(0);
     }
+    vector<pair<int,int>> q;
+    for (int i = 0; i < X.size(); ++i)
+    {
+        for (int j = i; j < X.size(); ++j)
+        {
+            q.emplace_back(i,j);
+        }
+    }
     iterations = 0;
-    if(lookAhead(v,D,C,ins))
+    if(lookAhead(v,D,C,ins,q,heuristic))
     {
         cout << "after: " << iterations << " iterations, done!" << endl;
         return v;
@@ -46,31 +54,44 @@ map<string,int> Solver::solve()
     return v;
 }
 
+bool Solver::allSingletons(Domains d)
+{
+    for (int i = 0; i < X.size(); ++i)
+    {
+        if(d[X[i]].size() != 1)
+            return false;
+    }
+    return true;
+}
+
 bool Solver::lookAhead(map<string,int>& A, Domains& d,Constraint ** c,
-                       vector<int> instanciated)
+                       vector<int> instanciated,vector<pair<int,int>> q,bool heuristic)
 {
     iterations++;
-    pc2(d,X,c,instanciated);
-    d.print();
-    if(inconsistant(c))
-        return false;
-    if(allInstanciated(instanciated))
+    pc2(d,X,c,q);
+//    pc1(d,X,c,instanciated);
+    if(inconsistant(c)) return false;
+    if(allInstanciated(instanciated)) return true;
+    if(allSingletons(d))
         return true;
-    int iV = nextH(X,d,instanciated);
+    int iV;
+    if(heuristic) // instantiating next variable with heuristic
+        iV = nextH(X,d,instanciated);
+    else
+        iV = next(X,d,instanciated);
     Variable v = X[iV];
-    instanciated[iV] = 1;
-    cout << "instanciating: " << v.name << endl;
+    instanciated[iV] = 1; // set instanciated of the variable to true
     for (int i = 0; i < d[v].size(); ++i)
     {
-        cout << "val: " << d[v][i] << endl;
         Domains newD = d;
         newD.clear(v);
-        newD.add(v,d[v][i]);
-        map<string,int> newA = A;
-        newA[v.name] = d[v][i];
-        Constraint** newC = copy(c);
-        updateConstraint(newD,newC,X);
-        if(lookAhead(newA,newD,newC,instanciated))
+        newD.add(v,d[v][i]); // setting new domain of the variable instantiated
+        map<string,int> newA = A; // copying the values instantiated
+        newA[v.name] = d[v][i]; // setting the new instantiated variable
+        Constraint** newC = copy(c); // copying the Mp Matrix for recursive method call
+        updateConstraint(newD,newC,X); // update the new Mp Matrix to match the newly instantiated variable
+        q.emplace_back(iV,iV); // adding in the queue the newly instantiated variable for next call's PC2
+        if(lookAhead(newA,newD,newC,instanciated,q,heuristic)) // call of look ahead
         {
             A = newA;
             return true;
@@ -79,25 +100,22 @@ bool Solver::lookAhead(map<string,int>& A, Domains& d,Constraint ** c,
     return false;
 }
 
-void Solver::pc2(Domains &d, vector<Variable> &x, Constraint **c, vector<int> ins)
+void Solver::pc2(Domains &d, vector<Variable> &x, Constraint **c, vector<pair<int,int>> q)
 {
-    vector<pair<int,int>> q;
-    for (int i = 0; i < x.size(); ++i)
-    {
-        for (int j = i+1; j < x.size(); ++j)
-        {
-            q.emplace_back(i,j);
-        }
-    }
+    int it = 0;
     while (!q.empty())
     {
+
         pair<int,int> p = q[0];
-        q.pop_back();
+//        q.pop_back();
+        q.erase(q.begin());
         int i = p.first,j = p.second;
         for (int k = 0; k < x.size(); ++k)
         {
+            it++;
             if(k == i && k == j)continue;
             Constraint temp = c[i][k]&(c[i][j]*c[j][j]*c[j][k]);
+
             if(!(temp == c[i][k]))
             {
                 c[i][k] = temp;
@@ -113,12 +131,14 @@ void Solver::pc2(Domains &d, vector<Variable> &x, Constraint **c, vector<int> in
             }
         }
     }
+    cout << "iterated: " << it << endl;
     updateDomain(d,c,x);
 }
 
 void Solver::pc1(Domains& d, vector<Variable>& x, Constraint ** c,vector<int> instanciated)
 {
     bool done;
+    int it = 0;
     do
     {
         done = true;
@@ -128,12 +148,14 @@ void Solver::pc1(Domains& d, vector<Variable>& x, Constraint ** c,vector<int> in
             {
                 for (int k = 0; k < X.size(); ++k)
                 {
+                    it++;
                     if (revise(i, j, k, d, c)) done = false;
                 }
             }
         }
     }
     while(!done);
+    cout << "iterated: " << it << endl;
     updateDomain(d,c,x);
 }
 
@@ -146,25 +168,42 @@ bool Solver::revise(int i, int j, int k, Domains d, Constraint **c)
     return true;
 }
 
+//void Solver::updateDomain(Domains& d, Constraint **c,vector<Variable>& x)
+//{
+//    for (int i = 0; i < x.size(); ++i)
+//    {
+//        for (int j = 0; j < x.size(); ++j)
+//        {
+//            Constraint con = c[i][j];
+//            Variable var = x[i];
+//            for (int k = 0; k < con.n; ++k)
+//            {
+//                bool allZero = true;
+//                for (int l = 0; l < con.m && allZero; ++l)
+//                {
+//                    if(con[k][l] != 0) allZero = false;
+//                }
+//                if(allZero)
+//                {
+//                    cout << "removing from i: " << i << " the " << k << endl;
+//                    d.remove(var,k);
+//                }
+//            }
+//        }
+//    }
+//}
+
 void Solver::updateDomain(Domains& d, Constraint **c,vector<Variable>& x)
 {
     for (int i = 0; i < x.size(); ++i)
     {
-        for (int j = 0; j < x.size(); ++j)
+        Constraint con = c[i][i];
+        Variable var = x[i];
+        for (int l = 0; l < con.n; ++l)
         {
-            Constraint con = c[i][j];
-            Variable var = x[i];
-            for (int k = 0; k < con.n; ++k)
+            if(con[l][l] == 0)
             {
-                bool allZero = true;
-                for (int l = 0; l < con.m && allZero; ++l)
-                {
-                    if(con[k][l] != 0) allZero = false;
-                }
-                if(allZero)
-                {
-                    d.remove(var,k);
-                }
+                d.remove(var, l);
             }
         }
     }
@@ -228,15 +267,6 @@ int Solver::next(vector<Variable>& vec, Domains D,vector<int> instanciated)
     }
 }
 
-bool Solver::allInstanciated(vector<int> instanciated)
-{
-    for (int i = 0; i < instanciated.size(); ++i)
-    {
-        if(!instanciated[i])
-            return false;
-    }
-    return true;
-}
 
 int Solver::nextH(vector<Variable> &vec, Domains D, vector<int> instanciated)
 {
@@ -252,6 +282,29 @@ int Solver::nextH(vector<Variable> &vec, Domains D, vector<int> instanciated)
         }
     }
     return savedI;
+}
+
+bool Solver::allInstanciated(vector<int> instanciated)
+{
+    for (int i = 0; i < instanciated.size(); ++i)
+    {
+        if(!instanciated[i])
+            return false;
+    }
+    return true;
+}
+
+
+void Solver::print()
+{
+    for (int i = 0; i < X.size(); ++i)
+    {
+        for (int j = 0; j < X.size(); ++j)
+        {
+            cout << "Mp[" << i << "," << j << "]:" << endl;
+            C[i][j].print();
+        }
+    }
 }
 
 

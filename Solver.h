@@ -10,37 +10,29 @@
 #include "Constraint.h"
 
 class Solver
-{
+{   // CSP parameters
     Domains D;
     vector<Variable> X;
     Constraint** C;
 public:
     int iterations = 0;
-    Solver(Domains &D, const vector<Variable> &X);
-    void setConstraint(int i,int j, Constraint c);
-    map<string,int> solve();
-    void pc1(Domains&,vector<Variable>&,Constraint**,vector<int>);
-    void pc2(Domains&,vector<Variable>&,Constraint**,vector<int>);
-    bool revise(int i,int j,int k,Domains d, Constraint** c);
-    void updateDomain(Domains& d, Constraint** c,vector<Variable>& x);
-    void updateConstraint(Domains& d, Constraint** c,vector<Variable>& x);
-    bool lookAhead(map<string,int>&,Domains&,Constraint**,vector<int>);
-    Constraint** copy(Constraint** c);
+    Solver(Domains &D, const vector<Variable> &X); // constructor
+    void setConstraint(int i,int j, Constraint c); // set constraint between variables i and j
+    map<string,int> solve(bool heuristic); // solve the CSP
+    bool lookAhead(map<string,int>&,Domains&,Constraint**,vector<int>,
+                   vector<pair<int,int>> q,bool heuristic);
+    void pc2(Domains&,vector<Variable>&,Constraint**,vector<pair<int,int>>);
     bool inconsistant(Constraint** c);
     int next(vector<Variable>& vec,Domains D,vector<int>);
     int nextH(vector<Variable>& vec,Domains D,vector<int>);
+    Constraint** copy(Constraint** c);
+    void updateDomain(Domains& d, Constraint** c,vector<Variable>& x);
+    void updateConstraint(Domains& d, Constraint** c,vector<Variable>& x);
     bool allInstanciated(vector<int> instanciated);
-    void print()
-    {
-        for (int i = 0; i < X.size(); ++i)
-        {
-            for (int j = 0; j < X.size(); ++j)
-            {
-                cout << "Mp[" << i << "," << j << "]:" << endl;
-                C[i][j].print();
-            }
-        }
-    }
+    void pc1(Domains&,vector<Variable>&,Constraint**,vector<int>);
+    bool revise(int i,int j,int k,Domains d, Constraint** c);
+    bool allSingletons(Domains d);
+    void print();
 };
 
 
