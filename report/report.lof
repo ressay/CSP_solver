@@ -11,7 +11,7 @@
 \contentsline {figure}{\numberline {2.9}{\ignorespaces Résultats de l'application de PC2 sur le problème des N-Reines\relax }}{8}{figure.caption.12}
 \contentsline {figure}{\numberline {2.10}{\ignorespaces temps d'exécution de PC2 par nombre de reines\relax }}{8}{figure.caption.13}
 \contentsline {figure}{\numberline {2.11}{\ignorespaces temps d'exécution de PC1 par nombre de reines\relax }}{8}{figure.caption.14}
-\contentsline {figure}{\numberline {2.12}{\ignorespaces Variation de la difficulté en utilisant filtrage PC2\relax }}{9}{figure.caption.15}
-\contentsline {figure}{\numberline {2.13}{\ignorespaces Variation du nombre de variables en utilisant filtrage PC2\relax }}{9}{figure.caption.16}
-\contentsline {figure}{\numberline {2.14}{\ignorespaces Variation des tailles des domaines en utilisant filtrage PC2\relax }}{10}{figure.caption.17}
+\contentsline {figure}{\numberline {2.12}{\ignorespaces Variation du temps d'exécution selon la difficulté\relax }}{9}{figure.caption.15}
+\contentsline {figure}{\numberline {2.13}{\ignorespaces Variation du temps d'exécution selon le nombre de variables\relax }}{9}{figure.caption.16}
+\contentsline {figure}{\numberline {2.14}{\ignorespaces Variation du temps d'exécution selon les tailles des domaines\relax }}{10}{figure.caption.17}
 \addvspace {10\p@ }
