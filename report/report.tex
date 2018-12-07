@@ -33,7 +33,7 @@
 \usepackage{xcolor}
 \usepackage{framed}
 %\usepackage{arabluatex}
-%\usepackage[algo2e, french, onelanguage, ruled]{algorithm2e}
+\usepackage[ruled,french,onelanguage]{algorithm2e}
 \setlist[itemize]{label=\textbullet}
 \usepackage{fancyhdr}
 \pagestyle{fancy}   
@@ -65,7 +65,201 @@
 \chapter{Introduction}
 	\section{Problématique et objectifs }
 	\paragraph{}
+	Dans le domaine de la résolution de problèmes, nous faisons souvent appel à des 
+	techniques et algorithmes dits \textbf{intelligents} pour la recherche d'éventuelles
+	solutions. Les problèmes de satisfaction de contraintes en sont un exemple, ainsi le
+	paradigme de la  programmation par contraintes à été introduit pour modéliser ces 
+	et résoudre ces types de problèmes, en introduisant des méthodes venant de la théorie
+	des ensembles et de la logique mathématique.
+	\par 
+	Dans ce projet, nous allons proposer notre propre implémentation d'une version d'un 
+	algorithme bien connu de résolution d'un PSC\footnote{Problème de Satisfaction de Contraintes}
+	, à savoir l'algorithme \textbf{Look-Ahead} avec filtrage \textbf{PC1 }et \textbf{PC2}.
+	\par 
+	Avant de commencer nous devons tout d'abord définir dans ce chapitre quelques notions
+	théoriques(section suivante), puis présenter le squelette des algorithmes utilisés,
+	puis nous définirons dans le chapitre suivant les principales composantes de notre
+	système, nous finirons ensuite par une comparaison entre les deux types de filtrage
+	utilisés sur deux PSC, l'un connu et un autre dont les paramètres sont générés 
+	aléatoirement. Nous conclurons ce travail par une conclusion générale récapitulant 
+	l'ensemble des connaissances apprises.
 
+	\section{Définitions}
+	\paragraph{}
+	Dans cette section nous allons définir les composantes théoriques d'un PSC, ainsi que 
+	ceux d'un algorithme de résolution d'un PSC.
+	
+	\subsection{Problème de Satisfaction de Contraintes}
+	\paragraph{}
+	Un PSC, est formellement définie comme étant un triplet $<X,D,C>$, où : 
+	\begin{itemize}
+		\item $X = \lbrace x_1,x_2,...,x_n\rbrace$ est l'ensemble des variables du PSC.
+		\item $D = \lbrace D_1,D_2,...,D_n\rbrace$  est l'ensemble des domaines des variables, c'est-à-dire que pour tout $k\in [1;n]$ nous avons $x_k \in D_k$.
+		\item $C = \lbrace C_1,C_2,...,C_m\rbrace$ est un ensemble de contraintes. Une contrainte $C_i = (X_i,R_i)$ est définie par l'ensemble $X = \lbrace x_{i_1},x_{i_2},...,x_{i_n} \rbrace$ des variables sur lequel elle porte et la relation $R \subset D_{i_1} \times ... \times D_{i_k}$ qui définit l'ensemble des valeurs que peuvent prendre simultanément les variables de $X_i$
+	\end{itemize}
+	
+	\subsection{Consistance d'un PSC}
+	\paragraph{}
+	Un PSC est dit consistant si l'on parvient à trouver une instanciation des variables $X_i$ tel que toutes les 
+	contraintes $C_j$ soient satisfaites en même temps.
+	\par 
+	Pour ce faire nous utiliserons des algorithmes de recherche de solutions dit intelligents, parmi eux l'algorithme
+	\textbf{Look-Ahead}, l'idée est d'instancier des variables une à une en essayant d'appliquer un filtrage des domaines des
+	variables non encore instanciées, ainsi, ç l'instanciation d'une variable, le choix de sa valeur sera idéalement 
+	plus restreint, et de ce fait le temps de recherche et de détection d'inconsistance sera plus court.
+	\par 
+	Look-ahead applique au niveau de chaque noeud un filtrage de consistance de chemin\footnote{\url{https://en.wikipedia.org/wiki/Local_consistency}}. Nous allons voir deux algorithme de consistance 
+	de chemin, PC1 et PC2.
+	\paragraph{Remarque}: 
+	Pour les détails théorique, il faut se référer au support de cours qui donne de très bonnes explications. Dans ce rapport
+	nous ne présenterons que les algorithmes des différentes méthodes
+	
+	\paragraph{PC1}
+	Nous devons d'abord définir une fonction \textbf{REVISE\_PC}: \\
+	
+	\begin{algorithm}[H]
+		\caption{REVISE\_PC}
+		\SetKwInOut{Input}{Entrée}\SetKwInOut{Output}{Sortie}
+		\SetKwFunction{gen}{GenererCandidats}
+		
+		\Input{$(X_i,X_k,X_j ),(X,D,C)$}
+		\Output{$VRAI/FAUX$}
+		
+		
+		\Begin
+		{
+			$temp \gets M_P[i,j]\bigcap M_P[i,k]°MP[k,k]°MP[k,j]$\;
+			\eIf{ $temp \neq M_P[i,j]$}
+			{
+				$M_P[i,j] \gets temp$
+				\KwRet{$VRAI$}
+				
+			}
+			{
+					\KwRet{$FAUX$}
+			}
+			
+		}
+	\end{algorithm}
+	
+	\par 
+	L'algorithme PC1 est le suivant : 
+	
+	\begin{algorithm}[H]
+		\caption{PC1}
+		\SetKwInOut{Input}{Entrée}\SetKwInOut{Output}{Sortie}
+		\SetKwFunction{gen}{GenererCandidats}
+		\SetKwFunction{rev}{REVISE\_PC}
+		
+		\Input{$(X,D,C)$}
+		\Output{$(X,D,C)$}
+		
+		$Q \gets {(X_i,X_k,X_j)\in X^3 : \lnot (X_i=X_k=X_j)}$\;
+		\Repeat{$R = FAUX$}
+		{
+			$R \gets FAUX$\;
+			\ForEach{$(X_i,X_k,X_j)\in Q$}
+			{
+				\If{\rev{$(X_i,X_k,X_j),(X,D,C) = VRAI$}}
+				{
+					$R \gets VRAI$\;	
+				}
+			}
+		}
+		\KwRet{$(X,D,C)$}\;
+	\end{algorithm}
+	
+		
+	\par 
+	L'algorithme PC2 est le suivant : 
+	
+		\begin{algorithm}[H]
+		\caption{PC2}
+		\SetKwInOut{Input}{Entrée}\SetKwInOut{Output}{Sortie}
+		\SetKwFunction{gen}{GenererCandidats}
+		\SetKwFunction{rev}{REVISE\_PC}
+		
+		\Input{$(X,D,C)$}
+		\Output{$(X,D,C)$}
+		
+		$Q \gets {(X_i,X_j) \in X^2 : (i \leq j) \text{ et il existe une contrainte entre } X_i \text{ et } X_j}$\;
+		
+		\While{$Q \neq \emptyset $}
+		{
+			$\text{Prendre une paire } (X_i,X_j) \text{ de variables de } Q\text{, et l’en supprimer }: Q \gets Q - \lbrace(X_i,X_j)\rbrace$\;
+		}
+		
+		\For{$k=1$\KwTo $n \land \lnot (k=i=j)$ }
+		{
+			$temp \gets M_P[i,k] \bigcap M_P[i,j]°M_P[j,j]°M_P[j,k]$\;
+			\If{$temp \neq M_P[i,k]$}
+			{
+				$M_P[i,k] \gets temp$\;
+				$M_P[k,i] \gets (temp)^T$\;
+				\eIf{$i\leq k$}
+				{$ Q\gets Q \bigcup \lbrace(X_i,X_k)\rbrace $\;}
+				{$ Q\gets Q \bigcup \lbrace(X_k,X_i)\rbrace $\;}
+			}
+		
+			$temp \gets M_P[k,j] \bigcap M_P[k,i]°M_P[i,i]°M_P[i,j]$\;
+			\If{$temp \neq M_P[k,j]$}
+			{
+				$M_P[k,j] \gets temp$\;
+				$M_P[j,k] \gets (temp)^T$\;
+				
+				\eIf{$k\leq j$}
+				{$ Q\gets Q \bigcup \lbrace(X_k,X_j)\rbrace $\;}
+				{$ Q\gets Q \bigcup \lbrace(X_j,X_k)\rbrace $\;}
+			}
+		}
+		
+		
+		\KwRet{$(X,D,C)$}\;
+	\end{algorithm}
+
+	\par 
+	Enfin l'algorithme look-ahead avec un choix de filtrage : \\
+	\begin{algorithm}[H]
+		\caption{LOOK-AHEAD}
+		\SetKwInOut{Input}{Entrée}\SetKwInOut{Output}{Sortie}
+		\SetKwFunction{gen}{GenererCandidats}
+		\SetKwFunction{pc}{PC1}
+		\SetKwFunction{pcc}{PC2}
+		
+		
+		\Input{$A,(X,D,C)$}
+		\Output{$VRAI/FAUX$}
+		
+		$Consistance \gets $ \pc{$(X,D,C)$} OU $Consistance \gets $  \pcc{$(X,D,C)$}\; 
+		
+		\If{$\lnot Consistance$}
+		{
+			\KwRet{$FAUX$}\;
+		}
+	
+		\eIf{ toutes les variables de $X$ sont instanciées}
+		{
+			\KwRet{$VRAI$}\;
+		}
+		{
+			 $Xi \gets $ variable de $X$ qui n’est pas encore instanciée\;
+			 	
+			 \For{$ V_i \in D(X_i) $}
+			 {
+			 	$D\prime (X_i)=\lbrace Vi \rbrace$\;
+			 	$D\prime \gets (D - \lbrace D(X_i) \rbrace )\bigcup {D\prime (X_i)}$\;
+			 	\If{$Look-Ahead(A \bigcup \lbrace (X_i,V_i)\rbrace,(X,D\prime,C))$}
+			 	{
+			 		\KwRet{$VRAI$}\;
+		 		}
+			 }
+		 \KwRet{$FAUX$}\;
+			
+		}
+	\end{algorithm}
+	
+	
+	
 \chapter{Solution proposées et implémentation}
 Dans ce chapitre nous allons voir l'implémentation de l'algorithme lookAhead avec filtrage PC2 tel que décrit dans le chapitre précédent.
 \section{Outils utilisés}
@@ -230,7 +424,16 @@ La taille du domaine est elle aussi relié proportionnellement  au temps d’ex�
 \end{figure}
 \chapter{Conclusion générale}
 \paragraph{}
-
+Au terme de projet nous pouvons donc tirer les conclusions suivantes :
+\begin{itemize}
+	\item Pour ce qui est des petites instances ,l'ajout d'une heuristique(que ce soit avec filtrage PC1 ou PC2) à l'algorithme look-ahead n'influence pas beaucoup sur le temps d'exécution si le nombre de variable est petit, mais plus ce nombre augmente, plus l'apport de l'heuristique se fait ressentir. Cela dépend bien sur du choix de cette dernière.
+	
+	\item Pour un nombre de contraintes et de variables fixe, et une difficulté moyenne(existence de solutions complexes), le filtrage par PC2 et avec l'utilisation d'une heuristique diminue notablement le temps d'exécution. 
+	
+	\item L'utilisation d'une heuristique quand le nombre de variables est assez grand ralenti légèrement l'algorithme.
+	
+	\item avec l'utilisation du filtrage PC2 au lieu de PC1, l'algorithme LOOK-AHEAD rend généralement une réponse plus rapidement, mais pas de manière significative.
+\end{itemize} 
 
 
 \end{document}}
