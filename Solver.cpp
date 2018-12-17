@@ -47,10 +47,10 @@ map<string,int> Solver::solve(bool heuristic)
     iterations = 0;
     if(lookAhead(v,D,C,ins,q,heuristic))
     {
-        cout << "after: " << iterations << " iterations, done!" << endl;
+        cout << "après: " << iterations << " iterations, résultat trouvé!" << endl;
         return v;
     }
-    cout << "no answer";
+    cout << "pas de résultat\n";
     return v;
 }
 
@@ -73,7 +73,13 @@ bool Solver::lookAhead(map<string,int>& A, Domains& d,Constraint ** c,
     if(inconsistant(c)) return false;
     if(allInstanciated(instanciated)) return true;
     if(allSingletons(d))
+    {
+        for (int i = 0; i < X.size(); ++i) {
+            A[X[i].name] = d[X[i]][0];
+        }
         return true;
+    }
+
     int iV;
     if(heuristic) // instantiating next variable with heuristic
         iV = nextH(X,d,instanciated);
@@ -86,14 +92,14 @@ bool Solver::lookAhead(map<string,int>& A, Domains& d,Constraint ** c,
         Domains newD = d;
         newD.clear(v);
         newD.add(v,d[v][i]); // setting new domain of the variable instantiated
+        A[v.name] = d[v][i];
         map<string,int> newA = A; // copying the values instantiated
-        newA[v.name] = d[v][i]; // setting the new instantiated variable
         Constraint** newC = copy(c); // copying the Mp Matrix for recursive method call
         updateConstraint(newD,newC,X); // update the new Mp Matrix to match the newly instantiated variable
         q.emplace_back(iV,iV); // adding in the queue the newly instantiated variable for next call's PC2
-        if(lookAhead(newA,newD,newC,instanciated,q,heuristic)) // call of look ahead
+        if(lookAhead(A,newD,newC,instanciated,q,heuristic)) // call of look ahead
         {
-            A = newA;
+//            A = newA;
             return true;
         }
     }
@@ -131,7 +137,6 @@ void Solver::pc2(Domains &d, vector<Variable> &x, Constraint **c, vector<pair<in
             }
         }
     }
-    cout << "iterated: " << it << endl;
     updateDomain(d,c,x);
 }
 

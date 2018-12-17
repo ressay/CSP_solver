@@ -25,20 +25,27 @@ long getMillisTime()
     return ms.count();
 }
 
+void print(map<string,int> res, double time)
+{
+    map<string,int>::iterator it;
+    cout << "-----------------------------------------" << endl;
+    cout << "Résultat de l'algorithme  : (" << time << " ms)" << endl;
+    for(it = res.begin(); it != res.end(); it++)
+        cout << it->first << ": " << it->second << endl;
+    cout << "-----------------------------------------" << endl;
+}
+
 int main()
 {
-//    Solver s = generateNQueenProblem(13);
-    Solver s = generateCSPRandom(8,6,0.3);
+    Solver s = generateNQueenProblem(10);
+//    Solver s = generateCSPRandom(8,6,0.3);
     s.print();
 
     long t1 = getMillisTime();
     map<string,int> res = s.solve(false);
     long t2 = getMillisTime();
-    printf("solved in %ld\n",(t2-t1));
     map<string,int>::iterator it;
-    cout << "result: " << endl;
-    for(it = res.begin(); it != res.end(); it++)
-        cout << it->first << ": " << it->second << endl;
+    print(res,t2-t1);
 //    queenStats();
 //    otherStats();
     return 0;
